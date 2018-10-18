@@ -6,13 +6,13 @@ class ControllerExtensionPaymentMpesa extends Controller
 
     public function index()
     {
-        $this->language->load('payment/mpesa');
+        $this->load->language('extension/payment/mpesa');
         $this->document->setTitle('Lipa na MPESA Configuration');
         $this->load->model('setting/setting');
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
             $this->model_setting_setting->editSetting('mpesa', $this->request->post);
             $this->session->data['success'] = 'Success: You have modified Lipa na Mpesa details!';
-            $this->redirect($this->url->link('extension/payment', 'token=' . $this->session->data['token'], 'SSL'));
+            $this->response->redirect($this->url->link('extension/payment', 'token=' . $this->session->data['user_token'], 'SSL'));
         }
         $data['heading_title'] = $this->language->get('heading_title');
         $data['text_enabled'] = $this->language->get('text_enabled');
