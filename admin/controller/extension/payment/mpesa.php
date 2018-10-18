@@ -10,9 +10,9 @@ class ControllerExtensionPaymentMpesa extends Controller
         $this->document->setTitle('Lipa na MPESA Configuration');
         $this->load->model('setting/setting');
         if (($this->request->server['REQUEST_METHOD'] == 'POST') && $this->validate()) {
-            $this->model_setting_setting->editSetting('mpesa', $this->request->post);
+            $this->model_setting_setting->editSetting('payment_mpesa', $this->request->post);
             $this->session->data['success'] = 'Success: You have modified Lipa na Mpesa details!';
-            $this->response->redirect($this->url->link('extension/payment', 'token=' . $this->session->data['user_token'], 'SSL'));
+            $this->response->redirect($this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=payment', true));
         }
         $data['heading_title'] = $this->language->get('heading_title');
         $data['text_enabled'] = $this->language->get('text_enabled');
@@ -27,77 +27,116 @@ class ControllerExtensionPaymentMpesa extends Controller
         $data['entry_sort_order'] = $this->language->get('entry_sort_order');
         $data['button_save'] = $this->language->get('button_save');
         $data['button_cancel'] = $this->language->get('button_cancel');
+
         if (isset($this->error['warning'])) {
             $data['error_warning'] = $this->error['warning'];
         } else {
             $data['error_warning'] = '';
         }
-        $this->load->model('localisation/language');
-        $languages = $this->model_localisation_language->getLanguages();
-        foreach ($languages as $language) {
-            if (isset($this->error['mpesa_' . $language['language_id']])) {
-                $data['error_mpesa_' . $language['language_id']] = $this->error['mpesa_' . $language['language_id']];
-            } else {
-                $data['error_mpesa_' . $language['language_id']] = '';
-            }
+
+        if (isset($this->error['app_id'])) {
+            $data['error_app_id'] = $this->error['app_id'];
+        } else {
+            $data['error_app_id'] = '';
         }
+
+        if (isset($this->error['merchant_private_key'])) {
+            $data['error_merchant_private_key'] = $this->error['merchant_private_key'];
+        } else {
+            $data['error_merchant_private_key'] = '';
+        }
+
+        if (isset($this->error['mpesa_public_key'])) {
+            $data['error_mpesa_public_key'] = $this->error['mpesa_public_key'];
+        } else {
+            $data['error_mpesa_public_key'] = '';
+        }
+
         $data['breadcrumbs'] = array();
+
         $data['breadcrumbs'][] = array(
             'text' => $this->language->get('text_home'),
-            'href' => $this->url->link('common/home', 'token=' . $this->session->data['user_token'], 'SSL'),
-            'separator' => false
+            'href' => $this->url->link('common/dashboard', 'user_token=' . $this->session->data['user_token'], true)
         );
+
         $data['breadcrumbs'][] = array(
-            'text' => $this->language->get('text_payment'),
-            'href' => $this->url->link('extension/payment', 'token=' . $this->session->data['user_token'], 'SSL'),
-            'separator' => ' :: '
+            'text' => $this->language->get('text_extension'),
+            'href' => $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=payment', true)
         );
+
         $data['breadcrumbs'][] = array(
             'text' => $this->language->get('heading_title'),
-            'href' => $this->url->link('payment/mpesa', 'token=' . $this->session->data['user_token'], 'SSL'),
-            'separator' => ' :: '
+            'href' => $this->url->link('extension/payment/mpesa', 'user_token=' . $this->session->data['user_token'], true)
         );
-        $data['action'] = $this->url->link('payment/mpesa', 'token=' . $this->session->data['user_token'], 'SSL');
-        $data['cancel'] = $this->url->link('extension/payment', 'token=' . $this->session->data['user_token'], 'SSL');
-        $this->load->model('localisation/language');
-        foreach ($languages as $language) {
-            if (isset($this->request->post['mpesa_' . $language['language_id']])) {
-                $data['mpesa_' . $language['language_id']] = $this->request->post['mpesa_' . $language['language_id']];
-            } else {
-                $data['mpesa_' . $language['language_id']] = $this->config->get('mpesa_' . $language['language_id']);
-            }
-        }
-        $data['languages'] = $languages;
-        if (isset($this->request->post['mpesa_total'])) {
-            $data['mpesa_total'] = $this->request->post['mpesa_total'];
+
+
+        $data['action'] = $this->url->link('extension/payment/mpesa', 'user_token=' . $this->session->data['user_token'], true);
+
+        $data['cancel'] = $this->url->link('marketplace/extension', 'user_token=' . $this->session->data['user_token'] . '&type=payment', true);
+
+
+        if (isset($this->request->post['payment_mpesa_app_id'])) {
+            $data['payment_mpesa_app_id'] = $this->request->post['payment_mpesa_app_id'];
         } else {
-            $data['mpesa_total'] = $this->config->get('mpesa_total');
+            $data['payment_mpesa_app_id'] = $this->config->get('payment_mpesa_app_id');
         }
-        if (isset($this->request->post['mpesa_order_status_id'])) {
-            $data['mpesa_order_status_id'] = $this->request->post['mpesa_order_status_id'];
+
+        if (isset($this->request->post['payment_mpesa_merchant_private_key'])) {
+            $data['payment_mpesa_merchant_private_key'] = $this->request->post['payment_mpesa_merchant_private_key'];
         } else {
-            $data['mpesa_order_status_id'] = $this->config->get('mpesa_order_status_id');
+            $data['payment_mpesa_merchant_private_key'] = $this->config->get('payment_mpesa_merchant_private_key');
         }
+
+        if (isset($this->request->post['payment_mpesa_portal_public_key'])) {
+            $data['payment_mpesa_portal_public_key'] = $this->request->post['payment_mpesa_portal_public_key'];
+        } else {
+            $data['payment_mpesa_portal_public_key'] = $this->config->get('payment_mpesa_portal_public_key');
+        }
+
+        if (isset($this->request->post['payment_mpesa_total'])) {
+            $data['payment_mpesa_total'] = $this->request->post['payment_mpesa_total'];
+        } else {
+            $data['payment_mpesa_total'] = $this->config->get('payment_mpesa_total');
+        }
+
+        if (isset($this->request->post['payment_mpesa_order_status_id'])) {
+            $data['payment_mpesa_order_status_id'] = $this->request->post['payment_mpesa_order_status_id'];
+        } else {
+            $data['payment_mpesa_order_status_id'] = $this->config->get('payment_mpesa_order_status_id');
+        }
+
         $this->load->model('localisation/order_status');
+
         $data['order_statuses'] = $this->model_localisation_order_status->getOrderStatuses();
-        if (isset($this->request->post['mpesa_geo_zone_id'])) {
-            $data['mpesa_geo_zone_id'] = $this->request->post['mpesa_geo_zone_id'];
+
+        if (isset($this->request->post['payment_mpesa_geo_zone_id'])) {
+            $data['payment_mpesa_geo_zone_id'] = $this->request->post['payment_mpesa_geo_zone_id'];
         } else {
-            $data['mpesa_geo_zone_id'] = $this->config->get('mpesa_geo_zone_id');
+            $data['payment_mpesa_geo_zone_id'] = $this->config->get('payment_mpesa_geo_zone_id');
         }
+
         $this->load->model('localisation/geo_zone');
+
         $data['geo_zones'] = $this->model_localisation_geo_zone->getGeoZones();
 
-        if (isset($this->request->post['mpesa_status'])) {
-            $data['mpesa_status'] = $this->request->post['mpesa_status'];
+        if (isset($this->request->post['payment_mpesa_test'])) {
+            $data['payment_mpesa_test'] = $this->request->post['payment_mpesa_test'];
         } else {
-            $data['mpesa_status'] = $this->config->get('mpesa_status');
+            $data['payment_mpesa_test'] = $this->config->get('payment_mpesa_test');
         }
-        if (isset($this->request->post['mpesa_sort_order'])) {
-            $data['mpesa_sort_order'] = $this->request->post['mpesa_sort_order'];
+
+        if (isset($this->request->post['payment_mpesa_status'])) {
+            $data['payment_mpesa_status'] = $this->request->post['payment_mpesa_status'];
         } else {
-            $data['mpesa_sort_order'] = $this->config->get('mpesa_sort_order');
+            $data['payment_mpesa_status'] = $this->config->get('payment_mpesa_status');
         }
+
+        if (isset($this->request->post['payment_mpesa_sort_order'])) {
+            $data['payment_mpesa_sort_order'] = $this->request->post['payment_mpesa_sort_order'];
+        } else {
+            $data['payment_mpesa_sort_order'] = $this->config->get('payment_mpesa_sort_order');
+        }
+
         $data['header'] = $this->load->controller('common/header');
         $data['column_left'] = $this->load->controller('common/column_left');
         $data['footer'] = $this->load->controller('common/footer');
@@ -107,20 +146,22 @@ class ControllerExtensionPaymentMpesa extends Controller
 
     protected function validate()
     {
-        if (!$this->user->hasPermission('modify', 'payment/mpesa')) {
+        if (!$this->user->hasPermission('modify', 'extension/payment/mpesa')) {
             $this->error['warning'] = $this->language->get('error_permission');
         }
-        $this->load->model('localisation/language');
-        $languages = $this->model_localisation_language->getLanguages();
-        foreach ($languages as $language) {
-            if (!$this->request->post['mpesa_' . $language['language_id']]) {
-                $this->error['mpesa_' . $language['language_id']] = $this->language->get('error_mpesa');
-            }
+
+        if (!$this->request->post['payment_mpesa_app_id']) {
+            $this->error['app_id'] = $this->language->get('error_app_id');
         }
-        if (!$this->error) {
-            return true;
-        } else {
-            return false;
+
+        if (!$this->request->post['payment_mpesa_merchant_private_key']) {
+            $this->error['merchant_private_key'] = $this->language->get('error_merchant_private_key');
         }
+
+        if (!$this->request->post['payment_mpesa_portal_public_key']) {
+            $this->error['mpesa_public_key'] = $this->language->get('error_mpesa_public_key');
+        }
+
+        return !$this->error;
     }
 }
